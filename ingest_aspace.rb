@@ -2,6 +2,7 @@
 require 'yaml'
 require 'json'
 require 'bundler'
+require 'date'
 Bundler.require(:default)
 
 raise "No config" unless File.exist?('config.yml')
@@ -89,13 +90,13 @@ class AspaceIngester
   end
 
   def queue_for_ingest(fname)
-    repo_id = $config['repositories'][File.basename(fname)[/^\D+/]]
+    repo_id = $config.fetch('repository_id', 2)
     $totlock.synchronize do
       $total += 1
     end
 
     json_req = Typhoeus::Request.new(
-      URI.join(@base_uri, '/plugins/jsonmodel_from_format/resource/ead'),
+      URI.join(@base_uri, "/repositories/#{repo_id}/jsonmodel_from_format/resource/ead"),
       method: :post,
       accept_encoding: "gzip",
       headers: {
@@ -164,9 +165,7 @@ $totlock = Mutex.new
 $ingest_logger.info { "BEGIN INGEST" }
 client = AspaceIngester.new
 
-ingest_files = Dir[File.join($config['ingest_dir'], '*.xml')].
-               sort.
-               select {|f| $config['repositories'][File.basename(f)[/^\D+/]]}
+ingest_files = Dir[File.join($config['ingest_dir'], '*.xml')].sort
 ingest_files.each_slice($config.fetch('batch_size', 20)) do |batch|
   client.authorize
   if batch.count > 0

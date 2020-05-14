@@ -1,9 +1,12 @@
 #!/usr/bin/env ruby
+require 'yaml'
 require 'json'
 require 'nokogiri'
 require 'pry'
 
 raise "Requires two arguments - an ingestlog, and an error_responses" unless ARGV.count >= 2
+raise "No config" unless File.exist?('config.yml')
+$config = YAML.safe_load(IO.read('config.yml'))
 
 $ingestlog = IO.read(File.expand_path(ARGV.shift))
 $error_responses = IO.read(File.expand_path(ARGV.shift))
@@ -45,14 +48,14 @@ end
 five_hundreds = $ingestlog.
                 lines.
                 grep(/Conversion of.*failed.*code '5\d{2}/).
-                map {|el| (m = el.match(/full\/(.*?).xml/)) && m[1]}.
+                map {|el| (m = el.match(/#{Regexp.quote($config['ingest_dir'])}\/(.*?).xml/)) && m[1]}.
                 map {|el| [el, err_resp_for(el)]}.
                 to_h
 
 four_hundreds = $ingestlog.
                 lines.
                 grep(/Conversion of.*failed.*code '4\d{2}/).
-                map {|el| (m = el.match(/full\/(.*?).xml/)) && m[1]}.
+                map {|el| (m = el.match(/#{Regexp.quote($config['ingest_dir'])}\/(.*?).xml/)) && m[1]}.
                 map {|el| [el, err_resp_for(el)]}.
                 to_h
 
@@ -75,7 +78,7 @@ by_error = {
   $ingestlog.
     lines.
     grep(/Upload of.*failed/).
-    map {|s| [(m = s.match(/full\/(.*?).xml/)) && m[1], s[(s.index('failed with error \'') + 19)...-2]]}.
+    map {|s| [(m = s.match(/#{Regexp.quote($config['ingest_dir'])}\/(.*?).xml/)) && m[1], s[(s.index('failed with error \'') + 19)...-2]]}.
     map {|(k,v)|
     m = v.match(
       /Server error: (?:Problem creating '(?<title>.*?)(?:': )(?<error_text>.*)"\]|(?<error_name>.*?: )(?<error_text>.*)"\])/)
@@ -134,7 +137,6 @@ puts <<-5XXHEADER << "\n"
 5XX Errors (#{five_hundreds.count} total)
 ======================================================================
 Errors in the conversion process that come from either Apache or Java.
-These are basically Dave's problem, feel free to ignore
 ======================================================================
 5XXHEADER
 

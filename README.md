@@ -43,7 +43,7 @@ This script can do concurrent requests, but versions of ArchivesSpace prior to 1
 There's also an "analyze_logs.rb" script provided, which can be used thusly:
 
 ```
-bundle exec analyze_logs.rb ingestlog.log error_responses > analysis.txt
+bundle exec ruby analyze_logs.rb ingestlog.log error_responses > analysis.txt
 ```
 
 It currently assumes that there is ONE and only ONE set of logs in each of those files - if you want to use the analysis script, you'll need to wipe ingestlog.log and error_responses between runs.
