@@ -96,7 +96,7 @@ class AspaceIngester
     end
 
     json_req = Typhoeus::Request.new(
-      URI.join(@base_uri, "/repositories/#{repo_id}/jsonmodel_from_format/resource/ead"),
+      URI.join(@base_uri, "/repositories/#{repo_id}/jsonmodel_from_format/resource/#{$config.fetch('converter_method', 'ead')}"),
       method: :post,
       accept_encoding: "gzip",
       headers: {

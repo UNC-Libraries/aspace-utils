@@ -2,6 +2,10 @@ backend_uri: http://my-backend-server.example.com
 username: user_who_can_create_records # defaults to "admin"
 password: my_clever_password
 
+# Converter used in jsonmodel-from-format plugin:
+# 'ead' to use ASpace's default EADConverter or 'unc_ead' to use custom UNC EADConverter
+converter_method: ead
+
 # Directory with EAD files to be uploaded
 ingest_dir: ./where_my_files_live
 
