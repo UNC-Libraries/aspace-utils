@@ -12,9 +12,9 @@ $ingestlog = IO.read(File.expand_path(ARGV.shift))
 $error_responses = IO.read(File.expand_path(ARGV.shift))
 $interactive = ARGV.shift
 
-(_, ok, bad, total) = *$ingestlog.
+(_, ok, excluded, bad, total) = *$ingestlog.
                        lines[-2].
-                       match(/(?<=OK: )(\d+) (?:FAIL: )(\d+) (?:TOTAL: )(\d+)/)
+                       match(/(?<=OK: )(\d+) (?:EXCLUDED: )(\d+) (?:FAIL: )(\d+) (?:TOTAL: )(\d+)/)
 
 def err_resp_for(eadid)
   m = $error_responses.match(/#{eadid}.xml.*?(?=>>>>>>>>>>>>>>>>>>>>>>>>>>>)/m)
@@ -97,9 +97,15 @@ upload_failures = by_error['Upload Failures'].group_by do |eadid, mdata|
   end
 end.map {|k, v| [k, v.to_h]}.to_h
 
+# Array of skipped EADs
+excludeds = $ingestlog.
+            lines.
+            grep(/Conversion of.*skipped per exclude list/).
+            map {|el| (m = el.match(/#{ingest_dir_regexp}\/(.*?).xml/)) && m[1]}
+
 binding.pry if $interactive
 
-puts "Summary: OK: #{ok}, FAILED: #{bad}, TOTAL: #{total}"
+puts "Summary: OK: #{ok}, EXCLUDED: #{excluded} FAILED: #{bad}, TOTAL: #{total}"
 puts <<-4XXHEADER << "\n";
 4XX Errors (#{four_hundreds.count} total)
 ===========================================================================================
@@ -151,3 +157,13 @@ by_error['5XX Errors'].each_pair do |error_name, eadids|
     puts "#{eadid}"
   end
 end
+
+puts <<-EXCLUDEDHEADER << "\n"
+EXCLUDED EADs (#{excludeds.count} total)
+======================================================================
+EADs skipped due to being listed on exclude list
+======================================================================
+EXCLUDEDHEADER
+
+puts excludeds.join("\n")
+

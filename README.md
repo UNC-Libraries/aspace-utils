@@ -11,6 +11,7 @@ The plugin converts ead xml to json object model, which allows import into Archi
 ## Installation
 - Check out this repository
 - Create config.yml file based on config.yml.example
+- Optionally create an exclude list ('exclude_list.txt') based on exclude_list.txt.example
 - Install dependencies via Bundler
 
     ``` shell
