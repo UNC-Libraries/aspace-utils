@@ -1,0 +1,113 @@
+# A list of EADs to be excluded from ingest.
+# Do not include filepaths or file extensions
+#   (i.e. NOT "SHC/30025" or "30025.xml")
+# Blank lines and lines beginning with '#' are ignored.
+# ------------------------------------
+
+# Too-granular (AS-35 / AS-147)
+P0031
+P0038
+P0081
+P0082
+P0091
+P0105
+05463
+20491
+40139
+
+# 04007* (SOHP) EADs (AS-35)
+# We'll create an entry for each letter though a few of them are not actually
+# in use.
+04007A
+04007B
+04007C
+04007D
+04007E
+04007F
+04007G
+04007H
+04007I
+04007J
+04007K
+04007L
+04007M
+04007N
+04007O
+04007P
+04007Q
+04007R
+04007S
+04007T
+04007U
+04007V
+04007W
+04007X
+04007Y
+04007Z
+# Some non-standard filenames:
+04007_B
+04007K001
+04007K002
+
+# NPS EADs (AS-35)
+nps34246848
+nps36049591
+nps36049682
+nps36049712
+nps36049736
+nps36049748
+nps3604975x
+nps36049761
+nps36049773
+nps36049785
+nps36049803
+nps36049839
+nps36049852
+nps36049876
+nps36049888
+nps3604989x
+nps36049906
+nps36049918
+nps3604992x
+nps36049931
+nps36049967
+nps36049979
+nps36050003
+nps36050039
+nps36050040
+nps36050052
+nps36050064
+nps36050076
+nps3605009x
+nps36050106
+nps36050362
+nps36050374
+nps36050477
+nps36050556
+nps3605060x
+nps36050611
+nps36050647
+nps36050751
+nps36050775
+nps36050787
+nps36050805
+nps36050817
+nps36050829
+nps36050830
+nps36050854
+nps36050878
+nps3605088x
+nps3605091x
+nps36050933
+nps36050945
+nps36050969
+nps44285425
+nps44401474
+nps78228645
+nps79240574
+nps81788034
+nps82777196
+nps82779570
+nps82925276
+nps82925288
+nps82926621
