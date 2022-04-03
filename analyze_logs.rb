@@ -44,18 +44,21 @@ def err_resp_for(eadid)
   end
 end
 
+# Create a regexp pattern that accounts for basic globbing in the ingest dir
+ingest_dir_regexp = Regexp.quote($config['ingest_dir']).
+                           gsub('\\*', '[^/]+')
 
 five_hundreds = $ingestlog.
                 lines.
                 grep(/Conversion of.*failed.*code '5\d{2}/).
-                map {|el| (m = el.match(/#{Regexp.quote($config['ingest_dir'])}\/(.*?).xml/)) && m[1]}.
+                map {|el| (m = el.match(/#{ingest_dir_regexp}\/(.*?).xml/)) && m[1]}.
                 map {|el| [el, err_resp_for(el)]}.
                 to_h
 
 four_hundreds = $ingestlog.
                 lines.
                 grep(/Conversion of.*failed.*code '4\d{2}/).
-                map {|el| (m = el.match(/#{Regexp.quote($config['ingest_dir'])}\/(.*?).xml/)) && m[1]}.
+                map {|el| (m = el.match(/#{ingest_dir_regexp}\/(.*?).xml/)) && m[1]}.
                 map {|el| [el, err_resp_for(el)]}.
                 to_h
 
@@ -78,7 +81,7 @@ by_error = {
   $ingestlog.
     lines.
     grep(/Upload of.*failed/).
-    map {|s| [(m = s.match(/#{Regexp.quote($config['ingest_dir'])}\/(.*?).xml/)) && m[1], s[(s.index('failed with error \'') + 19)...-2]]}.
+    map {|s| [(m = s.match(/#{ingest_dir_regexp}\/(.*?).xml/)) && m[1], s[(s.index('failed with error \'') + 19)...-2]]}.
     map {|(k,v)|
     m = v.match(
       /Server error: (?:Problem creating '(?<title>.*?)(?:': )(?<error_text>.*)"\]|(?<error_name>.*?: )(?<error_text>.*)"\])/)
