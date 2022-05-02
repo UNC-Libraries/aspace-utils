@@ -74,6 +74,9 @@ class AspaceIngester
   def initialize
     @hydra = Typhoeus::Hydra.new(max_concurrency: $config.fetch('max_concurrency', 4))
     @base_uri = "#{$config['backend_uri']}"
+    # If `exclude_list.txt` exists, use it to create an array of EADs to be
+    # excluded from ingest
+    @exclude_list = read_exclude_list('exclude_list.txt')
   end
 
   def authorize
@@ -89,10 +92,46 @@ class AspaceIngester
     raise "Failed to aquire auth"
   end
 
+  # Read list of EADs to exclude from ingest
+  #
+  # Returns an array of file basename strings to be excluded from ingest.
+  # Returns an empty array if passed filepath is not present.
+  #
+  # File should contain a newline-delimited list of filenames without filepaths
+  # or extensions. (e.g. '12345'; NOT '12345.xml' or '/eads/12345'). Refer to
+  # exclude_list.txt.example for an example file.
+  def read_exclude_list(filepath)
+    return [] unless File.file?(filepath)
+
+    exclude_list = []
+    File.foreach(filepath) do |line|
+      next if line.start_with?('#')
+
+      line.chomp!
+      exclude_list << line unless line.empty?
+    end
+
+    exclude_list
+  end
+
+  def skip_file?(fname)
+    basename = File.basename(fname, '.xml')
+    @exclude_list.include?(basename)
+  end
+
   def queue_for_ingest(fname)
     repo_id = $config.fetch('repository_id', 2)
     $totlock.synchronize do
       $total += 1
+    end
+
+    # Skip EADs on the exclude list
+    if skip_file?(fname)
+      $excludelock.synchronize do
+        $excludes += 1
+      end
+      $ingest_logger.info { "Conversion of '#{fname}' skipped per exclude list" }
+      return
     end
 
     json_req = Typhoeus::Request.new(
@@ -157,9 +196,11 @@ class AspaceIngester
 end
 
 $successes = 0
+$excludes = 0
 $total = 0
 
 $succlock = Mutex.new
+$excludelock = Mutex.new
 $totlock = Mutex.new
 
 $ingest_logger.info { "BEGIN INGEST" }
@@ -176,7 +217,7 @@ ingest_files.each_slice($config.fetch('batch_size', 20)) do |batch|
   end
 end
 
-$ingest_logger.info { "OK: #{$successes} FAIL: #{$total - $successes} TOTAL: #{$total}" }
+$ingest_logger.info { "OK: #{$successes} EXCLUDED: #{$excludes} FAIL: #{$total - $successes - $excludes} TOTAL: #{$total}" }
 $ingest_logger.info { "END INGEST" }
 
 $ingest_logger.close

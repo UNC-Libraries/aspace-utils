@@ -1,0 +1,6 @@
+# A list of EADs to be excluded from ingest.
+# Do not include filepaths or file extensions.
+#   (i.e. NOT "SHC/30025" or "30025.xml")
+# Blank lines and lines beginning with '#' are ignored.
+# ------------------------------------
+01234

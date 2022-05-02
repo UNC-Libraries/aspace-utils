@@ -12,9 +12,9 @@ $ingestlog = IO.read(File.expand_path(ARGV.shift))
 $error_responses = IO.read(File.expand_path(ARGV.shift))
 $interactive = ARGV.shift
 
-(_, ok, bad, total) = *$ingestlog.
+(_, ok, excluded, bad, total) = *$ingestlog.
                        lines[-2].
-                       match(/(?<=OK: )(\d+) (?:FAIL: )(\d+) (?:TOTAL: )(\d+)/)
+                       match(/(?<=OK: )(\d+) (?:EXCLUDED: )(\d+) (?:FAIL: )(\d+) (?:TOTAL: )(\d+)/)
 
 def err_resp_for(eadid)
   m = $error_responses.match(/#{eadid}.xml.*?(?=>>>>>>>>>>>>>>>>>>>>>>>>>>>)/m)
@@ -44,18 +44,21 @@ def err_resp_for(eadid)
   end
 end
 
+# Create a regexp pattern that accounts for basic globbing in the ingest dir
+ingest_dir_regexp = Regexp.quote($config['ingest_dir']).
+                           gsub('\\*', '[^/]+')
 
 five_hundreds = $ingestlog.
                 lines.
                 grep(/Conversion of.*failed.*code '5\d{2}/).
-                map {|el| (m = el.match(/#{Regexp.quote($config['ingest_dir'])}\/(.*?).xml/)) && m[1]}.
+                map {|el| (m = el.match(/#{ingest_dir_regexp}\/(.*?).xml/)) && m[1]}.
                 map {|el| [el, err_resp_for(el)]}.
                 to_h
 
 four_hundreds = $ingestlog.
                 lines.
                 grep(/Conversion of.*failed.*code '4\d{2}/).
-                map {|el| (m = el.match(/#{Regexp.quote($config['ingest_dir'])}\/(.*?).xml/)) && m[1]}.
+                map {|el| (m = el.match(/#{ingest_dir_regexp}\/(.*?).xml/)) && m[1]}.
                 map {|el| [el, err_resp_for(el)]}.
                 to_h
 
@@ -78,7 +81,7 @@ by_error = {
   $ingestlog.
     lines.
     grep(/Upload of.*failed/).
-    map {|s| [(m = s.match(/#{Regexp.quote($config['ingest_dir'])}\/(.*?).xml/)) && m[1], s[(s.index('failed with error \'') + 19)...-2]]}.
+    map {|s| [(m = s.match(/#{ingest_dir_regexp}\/(.*?).xml/)) && m[1], s[(s.index('failed with error \'') + 19)...-2]]}.
     map {|(k,v)|
     m = v.match(
       /Server error: (?:Problem creating '(?<title>.*?)(?:': )(?<error_text>.*)"\]|(?<error_name>.*?: )(?<error_text>.*)"\])/)
@@ -94,9 +97,15 @@ upload_failures = by_error['Upload Failures'].group_by do |eadid, mdata|
   end
 end.map {|k, v| [k, v.to_h]}.to_h
 
+# Array of skipped EADs
+excludeds = $ingestlog.
+            lines.
+            grep(/Conversion of.*skipped per exclude list/).
+            map {|el| (m = el.match(/#{ingest_dir_regexp}\/(.*?).xml/)) && m[1]}
+
 binding.pry if $interactive
 
-puts "Summary: OK: #{ok}, FAILED: #{bad}, TOTAL: #{total}"
+puts "Summary: OK: #{ok}, EXCLUDED: #{excluded} FAILED: #{bad}, TOTAL: #{total}"
 puts <<-4XXHEADER << "\n";
 4XX Errors (#{four_hundreds.count} total)
 ===========================================================================================
@@ -148,3 +157,13 @@ by_error['5XX Errors'].each_pair do |error_name, eadids|
     puts "#{eadid}"
   end
 end
+
+puts <<-EXCLUDEDHEADER << "\n"
+EXCLUDED EADs (#{excludeds.count} total)
+======================================================================
+EADs skipped due to being listed on exclude list
+======================================================================
+EXCLUDEDHEADER
+
+puts excludeds.join("\n")
+
