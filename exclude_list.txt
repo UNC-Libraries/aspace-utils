@@ -4,6 +4,12 @@
 # Blank lines and lines beginning with '#' are ignored.
 # ------------------------------------
 
+##### Migrating EADs
+# Large EAD, import as a background job (AS-288)
+11036
+
+
+##### Non-migrating EADs
 # Too-granular (AS-35 / AS-147)
 P0031
 P0038
