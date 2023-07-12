@@ -5,22 +5,13 @@
 # ------------------------------------
 
 ##### Migrating EADs
-# Large EAD, import as a background job (AS-288)
+# Large EAD, import as a background job (AS-288, AS-435/AS-398)
 11036
-
-
-##### Non-migrating EADs
-# Too-granular (AS-35 / AS-147)
 P0031
-P0038
-P0081
-P0082
 P0091
 P0105
-05463
-20491
-40139
 
+##### Non-migrating EADs
 # 04007* (SOHP) EADs (AS-35)
 # We'll create an entry for each letter though a few of them are not actually
 # in use.
