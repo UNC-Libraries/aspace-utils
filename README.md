@@ -1,5 +1,7 @@
 # ASpace EAD Batch Ingest Scripts
 
+ARCHIVED. This project has been archived and is no longer being developed or supported because UNC's migration into ArchivesSpace is complete
+
 These scripts rely on the presence of the [aspace-jsonmodel-from-format plugin](https://github.com/lyrasis/aspace-jsonmodel-from-format) in your instance of ArchivesSpace.
 The plugin converts ead xml to json object model, which allows import into ArchivesSpace. These scripts need not run on the same instance as the aspace instance, we use http post calls to the api (http://your.aspaceinstance:8089/..., for instance)
 
